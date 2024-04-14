@@ -4,6 +4,7 @@ import { Table } from './table/table'
 import { TableHeader } from './table/table-header'
 import { TableCell } from './table/table-cell'
 import { TableRow } from './table/table-row'
+import { attendees } from '../data/attendees'
 
 export function AttendeeList() {
     return (
@@ -29,22 +30,22 @@ export function AttendeeList() {
                     </tr>
                 </thead>
                 <tbody>
-                    {Array.from({ length: 8 }).map((_, i) => {
+                    {attendees.map((attendee) => {
                         return (
-                            <TableRow key={i}>
+                            <TableRow key={attendee.id}>
 
                                 <TableCell>
                                     <input type="checkbox" className='size-4 bg-black/20 rounded border-white/10 accent-orange-400' />
                                 </TableCell>
-                                <TableCell>1</TableCell>
+                                <TableCell>{attendee.id}</TableCell>
                                 <TableCell>
                                     <div className='flex flex-col gap-1'>
-                                        <span className='font-semibold text-white'>Higor Nóbrega</span>
-                                        <span>higorst.nobrega@gmail.com</span>
+                                        <span className='font-semibold text-white'>{attendee.name}</span>
+                                        <span>{attendee.email}</span>
                                     </div>
                                 </TableCell>
-                                <TableCell>7 dias atrás</TableCell>
-                                <TableCell>3 dias atrás</TableCell>
+                                <TableCell>{attendee.createdAt.toISOString()}</TableCell>
+                                <TableCell>{attendee.checkedInAt.toISOString()}</TableCell>
                                 <TableCell>
                                     <IconButton transparent>
                                         <MoreHorizontal className='size-4' />
