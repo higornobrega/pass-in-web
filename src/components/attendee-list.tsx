@@ -7,7 +7,6 @@ import { Table } from './table/table'
 import { TableHeader } from './table/table-header'
 import { TableCell } from './table/table-cell'
 import { TableRow } from './table/table-row'
-import { attendees } from '../data/attendees'
 import { ChangeEvent, useEffect, useState } from 'react'
 
 dayjs.extend(relativeTime)
@@ -23,48 +22,95 @@ interface Attendee {
 
 export function AttendeeList() {
 
-    const [seach, setSearch] = useState('')
-    const [page, setPage] = useState(1)
+    const [seach, setSearch] = useState(() => {
+        const url = new URL(window.location.toString())
+        if (url.searchParams.has('seach')) {
+            return url.searchParams.get('seach') ?? ''
+        } else {
+            return ''
+        }
+    })
+
+    const [page, setPage] = useState(() => {
+        const url = new URL(window.location.toString())
+        if (url.searchParams.has('page')) {
+            return Number(url.searchParams.get('page'))
+        } else {
+            return 1
+        }
+    })
+
     const [attendees, setAttendees] = useState<Attendee[]>([])
 
     const totalPages = Math.ceil(attendees.length / 10)
 
     useEffect(() => {
-        fetch('http://localhost:3000/events/2d24c6d8-d73d-4b41-b0c3-c4928015d5d5/attendees')
+
+        const url = new URL('http://localhost:3000/events/2d24c6d8-d73d-4b41-b0c3-c4928015d5d5/attendees')
+        
+        if (seach.length > 0){
+            url.searchParams.set('query', seach)
+        }
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 setAttendees(data.attendees)
             })
-    },[page])
-    function onSearchInputChange(event:ChangeEvent<HTMLInputElement>) {
+    }, [page, seach])
+    
+    function setCurrentSearch(seach: string) {
+        const url = new URL(window.location.toString())
 
-        setSearch(event.target.value)
+        url.searchParams.set('seach', seach)
+        window.history.pushState({}, "", url)
+        setSearch(seach)
     }
 
-    function goToNextPage() {
-        setPage(page + 1)
+    function setCurrentPage(page: number) {
+        const url = new URL(window.location.toString())
+
+        url.searchParams.set('page', String(page))
+        window.history.pushState({}, "", url)
+        setPage(page)
+    }
+
+    function onSearchInputChange(event:ChangeEvent<HTMLInputElement>) {
+
+        setCurrentSearch(event.target.value)
+        setCurrentPage(1)
     }
 
     function goToPreviusPage() {
-        setPage(page - 1)
+        setCurrentPage(page - 1)
     }
 
     function goToFirstPage() {
-        setPage(1)
+        setCurrentPage(1)
     }
 
     function goToLastPage() {
-        setPage(totalPages)
+        setCurrentPage(totalPages)
     }
+
+    function goToNextPage() {
+        
+        
+       setCurrentPage(page + 1)
+    }
+
     return (
         <div className='flex flex-col gap-4'>
             <div className="flex gap-3 items-center">
                 <h1 className='text-2xl font-bold'>Participantes</h1>
                 <div className="px-3 w-72 py-1.5 border border-white/10 rounded-lg flex items-center gap-3">
                     <Search className='size-4 text-emerald-300' />
-                    <input onChange={onSearchInputChange} className="bg-transparent flex-1 outline-none border-0 p-0 text-sm" placeholder="Buscar participantes..." />
+                    <input
+                        onChange={onSearchInputChange}
+                        value={seach}
+                        className="bg-transparent flex-1 outline-none border-0 p-0 text-sm focus:ring-0"
+                        placeholder="Buscar participantes..."
+                    />
                 </div>
-                {seach}
             </div>
             <Table>
                 <thead>
@@ -96,7 +142,7 @@ export function AttendeeList() {
                                 </TableCell>
                                 <TableCell>{dayjs().to(attendee.createdAt)}</TableCell>
                                 <TableCell>{attendee.checkedInAt === null
-                                    ? <span className='text-zinc-400'>'Não fez check-in'</span>
+                                    ? <span className='text-zinc-400'>Não fez check-in</span>
                                     : dayjs().to(attendee.checkedInAt)}</TableCell>
                                 <TableCell>
                                     <IconButton transparent>
