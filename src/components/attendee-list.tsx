@@ -8,16 +8,34 @@ import { TableHeader } from './table/table-header'
 import { TableCell } from './table/table-cell'
 import { TableRow } from './table/table-row'
 import { attendees } from '../data/attendees'
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 
 dayjs.extend(relativeTime)
 dayjs.locale('pt-br')
+
+interface Attendee {
+    id: string
+    name: string
+    email: string
+    createdAt: string
+    checkedInAt: string | null
+}
+
 export function AttendeeList() {
 
     const [seach, setSearch] = useState('')
     const [page, setPage] = useState(1)
+    const [attendees, setAttendees] = useState<Attendee[]>([])
 
     const totalPages = Math.ceil(attendees.length / 10)
+
+    useEffect(() => {
+        fetch('http://localhost:3000/events/2d24c6d8-d73d-4b41-b0c3-c4928015d5d5/attendees')
+            .then(response => response.json())
+            .then(data => {
+                setAttendees(data.attendees)
+            })
+    },[page])
     function onSearchInputChange(event:ChangeEvent<HTMLInputElement>) {
 
         setSearch(event.target.value)
@@ -77,7 +95,9 @@ export function AttendeeList() {
                                     </div>
                                 </TableCell>
                                 <TableCell>{dayjs().to(attendee.createdAt)}</TableCell>
-                                <TableCell>{dayjs().to(attendee.checkedInAt)}</TableCell>
+                                <TableCell>{attendee.checkedInAt === null
+                                    ? <span className='text-zinc-400'>'Não fez check-in'</span>
+                                    : dayjs().to(attendee.checkedInAt)}</TableCell>
                                 <TableCell>
                                     <IconButton transparent>
                                         <MoreHorizontal className='size-4' />
